@@ -5,54 +5,86 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jeff Curry</title>
   <style>
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: "Times New Roman", "Georgia", serif;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #fafafa;
-      color: #222;
+      background: #fffff8;
+      color: #111;
     }
-    .card {
-      text-align: center;
-      padding: 3rem 2rem;
+    .page {
+      max-width: 460px;
+      padding: 2rem;
+      animation: fadeIn 1.2s ease;
     }
     h1 {
-      font-size: 2.4rem;
-      font-weight: 600;
-      margin-bottom: 2rem;
+      font-size: 2rem;
+      font-weight: normal;
+      font-style: italic;
+      letter-spacing: 0.02em;
+      margin-bottom: 0.25rem;
     }
-    .links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      justify-content: center;
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1.8rem;
+      background: #111;
+      margin-left: 4px;
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
     }
-    .links a {
-      color: #555;
+    hr {
+      border: none;
+      border-top: 1px solid #111;
+      margin: 1.2rem 0;
+    }
+    nav {
+      line-height: 2;
+    }
+    nav a {
+      color: #111;
       text-decoration: none;
-      font-size: 1.05rem;
-      padding: 0.5rem 1.2rem;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      transition: all 0.2s;
+      border-bottom: 1px solid #ccc;
+      transition: border-color 0.3s;
     }
-    .links a:hover {
-      color: #000;
-      border-color: #999;
+    nav a:hover {
+      border-bottom-color: #111;
+    }
+    nav a::before {
+      content: "\2192\00a0";
+      font-family: monospace;
+      font-size: 0.85em;
+    }
+    .colophon {
+      margin-top: 2rem;
+      font-size: 0.75rem;
+      color: #999;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Jeff Curry</h1>
-    <div class="links">
-      <a href="https://linkedin.com/in/YOUR_LINKEDIN" target="_blank">LinkedIn</a>
-      <a href="https://open.spotify.com/user/YOUR_SPOTIFY" target="_blank">Spotify</a>
-      <a href="https://scholar.google.com/citations?user=YOUR_SCHOLAR_ID" target="_blank">Google Scholar</a>
-    </div>
+  <div class="page">
+    <h1>Jeff Curry<span class="cursor"></span></h1>
+    <hr>
+    <nav>
+      <a href="https://www.linkedin.com/in/jeffrey-curry/" target="_blank">LinkedIn</a><br>
+      <a href="https://open.spotify.com/artist/1amTGexKswbu26LrYlfoGj?si=sjHltRZKTTeig-9ydCRyww" target="_blank">Spotify</a><br>
+      <a href="https://scholar.google.com/citations?user=3UqJFZkAAAAJ&hl=en" target="_blank">Google Scholar</a>
+    </nav>
+    <div class="colophon">Est. 2026</div>
   </div>
 </body>
 </html>
