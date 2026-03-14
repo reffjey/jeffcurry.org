@@ -5,93 +5,189 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jeff Curry</title>
   <style>
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: "Times New Roman", "Georgia", serif;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 18px;
+      line-height: 1.7;
+      background: #fffff8;
+      color: #111;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #fffff8;
-      color: #111;
+      overflow: hidden;
+    }
+    #paint {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+      z-index: 0;
+      cursor: crosshair;
     }
     .page {
-      max-width: 460px;
+      text-align: center;
       padding: 2rem;
-      animation: fadeIn 1.2s ease;
+      position: relative;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .page * {
+      pointer-events: auto;
+    }
+    img {
+      width: 96px;
+      height: 96px;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+      margin-bottom: 1.5rem;
+      pointer-events: none;
     }
     h1 {
-      font-size: 2rem;
+      font-size: 1.4rem;
       font-weight: normal;
-      font-style: italic;
-      letter-spacing: 0.02em;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.6rem;
+      pointer-events: none;
     }
-    .cursor {
-      display: inline-block;
-      width: 2px;
-      height: 1.8rem;
-      background: #111;
-      margin-left: 4px;
-      vertical-align: text-bottom;
-      animation: blink 1s step-end infinite;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #111;
-      margin: 1.2rem 0;
-    }
-    nav {
-      line-height: 2;
-    }
-    nav a {
-      color: #111;
-      text-decoration: none;
-      border-bottom: 1px solid #ccc;
-      transition: border-color 0.3s;
-    }
-    nav a:hover {
-      border-bottom-color: #111;
-    }
-    nav a::before {
-      content: "\2192\00a0";
-      font-family: monospace;
-      font-size: 0.85em;
+    .bio {
+      font-size: 1rem;
+      color: #555;
+      margin-bottom: 0.6rem;
+      pointer-events: none;
     }
     .status {
-      font-size: 0.95rem;
-      margin-top: 0.5rem;
-      letter-spacing: 0.03em;
+      font-size: 1rem;
       color: #555;
+      margin-bottom: 1.5rem;
+      pointer-events: none;
     }
-    .colophon {
-      margin-top: 2rem;
-      font-size: 0.75rem;
-      color: #999;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
+    nav {
+      font-size: 1rem;
+      line-height: 2;
+    }
+    a {
+      color: #0000ee;
+      text-decoration: underline;
+      padding: 2px 4px;
+      transition: background 0.15s, color 0.15s;
+    }
+    a:visited {
+      color: #551a8b;
+    }
+    a:hover {
+      background: #00e5ff;
+      color: #111;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
+  <canvas id="paint"></canvas>
   <div class="page">
-    <h1>Jeff Curry<span class="cursor"></span></h1>
-    <p class="status">Coinbase &rarr; ????????</p>
-    <hr>
+    <img src="photo_pixel.png" alt="Jeff Curry">
+    <h1>Jeff Curry</h1>
+    <p class="bio">chaotic good</p>
+    <p class="status">Coinbase &rarr; <span id="scramble">?</span></p>
     <nav>
       <a href="https://www.linkedin.com/in/jeffrey-curry/" target="_blank">LinkedIn</a><br>
       <a href="https://open.spotify.com/artist/1amTGexKswbu26LrYlfoGj?si=sjHltRZKTTeig-9ydCRyww" target="_blank">Spotify</a><br>
       <a href="https://scholar.google.com/citations?user=3UqJFZkAAAAJ&hl=en" target="_blank">Google Scholar</a>
     </nav>
-    <div class="colophon">Est. 2026</div>
   </div>
+  <script>
+    // Scramble
+    const scrambleChars = '!@#$%&*?/\\|<>~^+=';
+    const scrambleEl = document.getElementById('scramble');
+    setInterval(() => {
+      scrambleEl.textContent = scrambleChars[Math.floor(Math.random() * scrambleChars.length)];
+    }, 120);
+
+    // Paint canvas
+    const canvas = document.getElementById('paint');
+    const ctx = canvas.getContext('2d');
+    const RES = 384;
+    let resY;
+
+    function sizeCanvas() {
+      const aspect = window.innerHeight / window.innerWidth;
+      canvas.width = RES;
+      resY = Math.floor(RES * aspect);
+      canvas.height = resY;
+      canvas.style.width = '100vw';
+      canvas.style.height = '100vh';
+    }
+    sizeCanvas();
+
+    ctx.fillStyle = '#fffff8';
+    ctx.fillRect(0, 0, RES, resY);
+
+    // Colors
+    const colors = [
+      '#ee4444', '#ee8833', '#eecc33',
+      '#44bb44', '#3388ee', '#8844cc', '#ee66aa',
+    ];
+
+    // Random color for this visitor
+    const myColor = colors[Math.floor(Math.random() * colors.length)];
+
+    // Starter scribbles
+    function scribble(x, y, len, color, dir) {
+      ctx.fillStyle = color;
+      for (let i = 0; i < len; i++) {
+        ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
+        x += (Math.random() - 0.5) * 3 + dir[0];
+        y += (Math.random() - 0.5) * 3 + dir[1];
+      }
+    }
+
+    for (let i = 0; i < 7; i++) {
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const x = Math.random() * RES;
+      const y = Math.random() * resY;
+      const len = 300 + Math.random() * 200;
+      const dx = (Math.random() - 0.5) * 2;
+      const dy = (Math.random() - 0.5) * 2;
+      scribble(x, y, len, color, [dx, dy]);
+    }
+
+    // Drawing
+    let painting = false;
+
+    function paint(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX / rect.width) * RES);
+      const y = Math.floor((e.clientY / rect.height) * resY);
+      ctx.fillStyle = myColor;
+      ctx.fillRect(x, y, 1, 1);
+    }
+
+    canvas.addEventListener('mousedown', (e) => { painting = true; paint(e); });
+    canvas.addEventListener('mousemove', (e) => { if (painting) paint(e); });
+    window.addEventListener('mouseup', () => { painting = false; });
+
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      painting = true;
+      paint(e.touches[0]);
+    });
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (painting) paint(e.touches[0]);
+    });
+    canvas.addEventListener('touchend', () => { painting = false; });
+
+    window.addEventListener('resize', () => {
+      const imageData = ctx.getImageData(0, 0, RES, canvas.height);
+      sizeCanvas();
+      ctx.fillStyle = '#fffff8';
+      ctx.fillRect(0, 0, RES, resY);
+      ctx.putImageData(imageData, 0, 0);
+    });
+  </script>
 </body>
 </html>
