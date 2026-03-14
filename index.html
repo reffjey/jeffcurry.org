@@ -27,7 +27,7 @@
       image-rendering: -moz-crisp-edges;
       image-rendering: crisp-edges;
       z-index: 0;
-      cursor: crosshair;
+      cursor: default;
     }
     .page {
       text-align: center;
@@ -38,15 +38,6 @@
     }
     .page * {
       pointer-events: auto;
-    }
-    img {
-      width: 96px;
-      height: 96px;
-      image-rendering: pixelated;
-      image-rendering: -moz-crisp-edges;
-      image-rendering: crisp-edges;
-      margin-bottom: 1.5rem;
-      pointer-events: none;
     }
     h1 {
       font-size: 1.4rem;
@@ -89,10 +80,9 @@
 <body>
   <canvas id="paint"></canvas>
   <div class="page">
-    <img src="photo_pixel.png" alt="Jeff Curry">
     <h1>Jeff Curry</h1>
     <p class="bio">chaotic good</p>
-    <p class="status">Coinbase &rarr; <span id="scramble">?</span></p>
+    <p class="status">Coinbase &rarr; AI</p>
     <nav>
       <a href="https://www.linkedin.com/in/jeffrey-curry/" target="_blank">LinkedIn</a><br>
       <a href="https://open.spotify.com/artist/1amTGexKswbu26LrYlfoGj?si=sjHltRZKTTeig-9ydCRyww" target="_blank">Spotify</a><br>
@@ -100,13 +90,6 @@
     </nav>
   </div>
   <script>
-    // Scramble
-    const scrambleChars = '!@#$%&*?/\\|<>~^+=';
-    const scrambleEl = document.getElementById('scramble');
-    setInterval(() => {
-      scrambleEl.textContent = scrambleChars[Math.floor(Math.random() * scrambleChars.length)];
-    }, 120);
-
     // Paint canvas
     const canvas = document.getElementById('paint');
     const ctx = canvas.getContext('2d');
@@ -136,20 +119,48 @@
     const myColor = colors[Math.floor(Math.random() * colors.length)];
 
     // Starter scribbles
+    // Exclusion zone around center content
+    const exLeft = RES * 0.38;
+    const exRight = RES * 0.62;
+    const exTop = resY * 0.35;
+    const exBottom = resY * 0.65;
+
+    function inExclusion(px, py) {
+      return px > exLeft && px < exRight && py > exTop && py < exBottom;
+    }
+
     function scribble(x, y, len, color, dir) {
+      ctx.globalAlpha = 0.5;
       ctx.fillStyle = color;
+      const cx = RES / 2, cy = resY / 2;
       for (let i = 0; i < len; i++) {
+        // Deflect strongly before entering the zone
+        const nextX = x + dir[0];
+        const nextY = y + dir[1];
+        if (inExclusion(nextX, nextY)) {
+          dir[0] += (x - cx) * 0.15;
+          dir[1] += (y - cy) * 0.15;
+        }
         ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
+        if (Math.random() < 0.08) {
+          dir[0] = -dir[0] + (Math.random() - 0.5) * 0.5;
+          dir[1] = -dir[1] + (Math.random() - 0.5) * 0.5;
+        }
         x += (Math.random() - 0.5) * 3 + dir[0];
         y += (Math.random() - 0.5) * 3 + dir[1];
       }
+      ctx.globalAlpha = 1;
     }
 
     for (let i = 0; i < 7; i++) {
       const color = colors[Math.floor(Math.random() * colors.length)];
-      const x = Math.random() * RES;
-      const y = Math.random() * resY;
-      const len = 300 + Math.random() * 200;
+      // Start scribbles outside the exclusion zone
+      let x, y;
+      do {
+        x = Math.random() * RES;
+        y = Math.random() * resY;
+      } while (inExclusion(x, y));
+      const len = 500 + Math.random() * 300;
       const dx = (Math.random() - 0.5) * 2;
       const dy = (Math.random() - 0.5) * 2;
       scribble(x, y, len, color, [dx, dy]);
@@ -180,6 +191,34 @@
       if (painting) paint(e.touches[0]);
     });
     canvas.addEventListener('touchend', () => { painting = false; });
+
+    // Secret mode
+    const secret = 'curry';
+    let secretBuffer = '';
+    document.addEventListener('keydown', (e) => {
+      if (e.key.length === 1) {
+        secretBuffer += e.key.toLowerCase();
+        if (secretBuffer.length > secret.length) {
+          secretBuffer = secretBuffer.slice(-secret.length);
+        }
+        if (secretBuffer === secret) {
+          // Load the pixelated photo as a custom cursor
+          const img = new Image();
+          img.src = 'photo_pixel.png';
+          img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = 32; c.height = 32;
+            const cx = c.getContext('2d');
+            cx.imageSmoothingEnabled = false;
+            cx.drawImage(img, 0, 0, 32, 32);
+            const dataUrl = c.toDataURL('image/png');
+            canvas.style.cursor = 'url(' + dataUrl + ') 16 16, crosshair';
+            document.body.style.cursor = 'url(' + dataUrl + ') 16 16, auto';
+          };
+          secretBuffer = '';
+        }
+      }
+    });
 
     window.addEventListener('resize', () => {
       const imageData = ctx.getImageData(0, 0, RES, canvas.height);
