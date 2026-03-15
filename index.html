@@ -82,7 +82,7 @@
   <div class="page">
     <h1>Jeff Curry</h1>
     <p class="bio">chaotic good</p>
-    <p class="status">Coinbase &rarr; AI</p>
+    <p class="status">Currently: Coinbase</p>
     <nav>
       <a href="https://www.linkedin.com/in/jeffrey-curry/" target="_blank">LinkedIn</a><br>
       <a href="https://open.spotify.com/artist/1amTGexKswbu26LrYlfoGj?si=sjHltRZKTTeig-9ydCRyww" target="_blank">Spotify</a><br>
@@ -115,9 +115,6 @@
       '#ee4444', '#ee8833', '#eecc33',
       '#44bb44', '#3388ee', '#8844cc', '#ee66aa',
     ];
-
-    // Random color for this visitor
-    const myColor = colors[Math.floor(Math.random() * colors.length)];
 
     // Starter scribbles
     // Exclusion zone around center content
@@ -166,32 +163,6 @@
       const dy = (Math.random() - 0.5) * 2;
       scribble(x, y, len, color, [dx, dy]);
     }
-
-    // Drawing
-    let painting = false;
-
-    function paint(e) {
-      const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((e.clientX / rect.width) * RES);
-      const y = Math.floor((e.clientY / rect.height) * resY);
-      ctx.fillStyle = myColor;
-      ctx.fillRect(x, y, 1, 1);
-    }
-
-    canvas.addEventListener('mousedown', (e) => { painting = true; paint(e); });
-    canvas.addEventListener('mousemove', (e) => { if (painting) paint(e); });
-    window.addEventListener('mouseup', () => { painting = false; });
-
-    canvas.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      painting = true;
-      paint(e.touches[0]);
-    });
-    canvas.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      if (painting) paint(e.touches[0]);
-    });
-    canvas.addEventListener('touchend', () => { painting = false; });
 
     // Secret mode
     const secret = 'curry';
