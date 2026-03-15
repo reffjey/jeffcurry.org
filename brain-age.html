@@ -18,6 +18,20 @@
       overflow: hidden;
       cursor: default;
     }
+    .close-btn {
+      position: fixed;
+      top: 1rem;
+      right: 1.2rem;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 1.5rem;
+      color: #999;
+      text-decoration: none;
+      line-height: 1;
+      z-index: 10;
+    }
+    .close-btn:hover {
+      color: #111;
+    }
     .container {
       text-align: center;
       width: 100%;
@@ -178,6 +192,7 @@
   </style>
 </head>
 <body>
+  <a href="/" class="close-btn">&times;</a>
   <div class="container">
     <div id="start-screen">
       <h1>Calculations x 20</h1>
