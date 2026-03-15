@@ -123,6 +123,21 @@
       color: #999;
       margin-top: 0.5rem;
     }
+    #clear-btn {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 0.95rem;
+      padding: 0.4rem 1.5rem;
+      background: none;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      color: #555;
+      margin-top: 0.5rem;
+      transition: background 0.15s;
+    }
+    #clear-btn:hover {
+      background: #00e5ff;
+      color: #111;
+    }
     #recognized {
       font-size: 2rem;
       height: 2.5rem;
@@ -182,6 +197,7 @@
       <div id="draw-area">
         <canvas id="draw-canvas" width="280" height="200"></canvas>
         <div id="recognized">&nbsp;</div>
+        <button id="clear-btn">clear</button>
         <div id="draw-hint">press to draw, lift to stop &middot; c to clear</div>
       </div>
     </div>
@@ -473,6 +489,22 @@
     drawCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); onMove(e); });
     drawCanvas.addEventListener('touchend', (e) => { e.preventDefault(); onUp(); });
 
+    // --- Correct answer ding ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playDing() {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+      osc.frequency.setValueAtTime(1174.7, audioCtx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+      osc.start(audioCtx.currentTime);
+      osc.stop(audioCtx.currentTime + 0.3);
+    }
+
     async function autoRecognize() {
       if (!gameActive) return;
       console.log('autoRecognize triggered');
@@ -481,6 +513,7 @@
       if (num !== null) {
         document.getElementById('recognized').textContent = num;
         if (num === problems[currentIndex].answer) {
+          playDing();
           setTimeout(() => advanceCorrect(), 200);
         }
       } else {
@@ -552,7 +585,10 @@
       document.getElementById('accuracy').textContent = correctCount + ' / 20 correct';
     }
 
-    // --- Keyboard ---
+    // --- Clear button + keyboard ---
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      if (gameActive) clearCanvas();
+    });
     document.addEventListener('keydown', (e) => {
       if (!gameActive) return;
       if (e.key === 'c' || e.key === 'C') {
