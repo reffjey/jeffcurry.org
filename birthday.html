@@ -11,11 +11,8 @@
       background: #fffff8;
       color: #111;
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: relative;
       cursor: default;
-      padding: 1rem;
     }
     .close-btn {
       position: fixed;
@@ -29,6 +26,17 @@
       z-index: 10;
     }
     .close-btn:hover { color: #111; }
+
+    /* Centered overlay containers — only one is visible at a time */
+    #lock-screen, #scene, #poem {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      max-width: 640px;
+      padding: 1rem;
+    }
 
     /* === Lock screen === */
     #lock-screen { text-align: center; }
@@ -62,11 +70,12 @@
     /* === Scene === */
     #scene {
       display: none;
-      width: 100%;
-      max-width: 640px;
-      position: relative;
+      opacity: 1;
+      transition: opacity 0.4s ease;
     }
     #scene.show { display: block; }
+    #scene.dim { opacity: 0; pointer-events: none; }
+
     #stage {
       width: 100%;
       height: auto;
@@ -74,7 +83,6 @@
     }
     @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
-    /* Pixel bird and cat keep crisp edges */
     .pixel-sprite { shape-rendering: crispEdges; }
 
     /* Bird */
@@ -109,7 +117,7 @@
       42%, 100% { opacity: 0; }
     }
 
-    /* Letter (crayon, drops onto doormat) */
+    /* Letter — drops in automatically, but only clickable + pulsing once .ready */
     .letter-drop {
       opacity: 0;
       animation: letter-drop 1.3s cubic-bezier(.5,.05,.7,.7) forwards;
@@ -122,103 +130,184 @@
       100% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
     }
     .letter-clickable {
-      cursor: pointer;
       transform-box: fill-box;
       transform-origin: center;
       transition: transform 0.2s ease;
     }
+    .letter-clickable.ready { cursor: pointer; }
+    .letter-clickable.ready:hover { transform: scale(1.12); }
     .letter-pulse {
-      animation: letter-pulse 1.4s ease-in-out infinite;
-      animation-delay: 6.5s;
       transform-box: fill-box;
       transform-origin: center;
+    }
+    .letter-pulse.ready {
+      animation: letter-pulse 1.4s ease-in-out infinite;
     }
     @keyframes letter-pulse {
       0%, 100% { transform: scale(1); }
       50%      { transform: scale(1.06); }
     }
-    .letter-clickable:hover { transform: scale(1.12); }
 
-    /* Door (swings open) */
+    /* Door — clickable, swings open only on .opening */
     .door-body {
+      cursor: pointer;
       transform-box: fill-box;
       transform-origin: left center;
+    }
+    .door-body.opening {
       animation: door-open 0.6s ease-out forwards;
-      animation-delay: 3.6s;
     }
     @keyframes door-open {
       0%   { transform: scaleX(1); }
       100% { transform: scaleX(0.1); }
     }
+    /* Doorknob pulse hint after letter drops, until door clicked */
+    .doorknob {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: knob-pulse 1.6s ease-in-out infinite;
+      animation-delay: 4s;
+    }
+    @keyframes knob-pulse {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.6); }
+    }
+    .door-clicked .doorknob { animation: none; }
 
-    /* Cat (emerges from door) */
+    /* Cat — emerges from door only on .emerging */
     .cat {
       opacity: 0;
       transform: translate(-17px, -28px);
+    }
+    .cat.emerging {
       animation:
-        cat-fade-in 0.3s ease forwards 4.05s,
-        cat-walk-out 1.6s cubic-bezier(.4,.0,.4,1) forwards 4.3s;
+        cat-fade-in 0.3s ease forwards,
+        cat-walk-out 1.6s cubic-bezier(.4,.0,.4,1) forwards 0.3s;
     }
-    @keyframes cat-fade-in {
-      to { opacity: 1; }
-    }
+    @keyframes cat-fade-in { to { opacity: 1; } }
     @keyframes cat-walk-out {
       from { transform: translate(-17px, -28px); }
       to   { transform: translate(0, 0); }
     }
-    .cat-bob {
-      animation: cat-bob 0.32s steps(2) infinite;
-      animation-delay: 4.3s;
+    .cat.emerging .cat-bob {
+      animation: cat-bob 0.32s steps(2) infinite 0.3s;
     }
     @keyframes cat-bob {
       0%,49%   { transform: translateY(0); }
       50%,100% { transform: translateY(-1px); }
     }
+    .cat.emerging .cat-paw {
+      animation: cat-scratch 0.22s ease-in-out infinite 1.9s;
+    }
     .cat-paw {
       transform-box: fill-box;
       transform-origin: center;
-      animation: cat-scratch 0.22s ease-in-out infinite;
-      animation-delay: 6s;
     }
     @keyframes cat-scratch {
       0%, 100% { transform: translate(0, 0); }
       50%      { transform: translate(-2px, -2px); }
     }
-    .spark {
-      opacity: 0;
-      animation: spark-flash 0.22s ease-out infinite;
-      animation-delay: 6s;
+    .spark { opacity: 0; }
+    .cat.emerging .spark {
+      animation: spark-flash 0.22s ease-out infinite 1.9s;
     }
-    .spark-2 { animation-delay: 6.11s; }
+    .cat.emerging .spark-2 { animation-delay: 2.01s; }
     @keyframes spark-flash {
       0%   { opacity: 0; transform: translate(0, 0) scale(0.6); }
       40%  { opacity: 1; }
       100% { opacity: 0; transform: translate(-2px, -2px) scale(1.1); }
     }
 
-    #skip {
+    /* Clickable hotspots — sun, chimney, dachshund sign */
+    #sun, #chimney, #dachshund-sign {
+      cursor: pointer;
+      transform-box: fill-box;
+      transform-origin: center;
+      transition: transform 0.15s ease;
+    }
+    #sun:hover         { transform: scale(1.1); }
+    #chimney:hover     { transform: scale(1.06); }
+    #dachshund-sign:hover { transform: scale(1.08); }
+
+    /* Easter egg: dachshund running across the grass */
+    .dachshund { opacity: 0; }
+    .dachshund.running {
+      animation: dachshund-run 2.6s linear forwards;
+    }
+    @keyframes dachshund-run {
+      0%   { opacity: 0; transform: translateX(-220px); }
+      5%   { opacity: 1; }
+      95%  { opacity: 1; }
+      100% { opacity: 0; transform: translateX(220px); }
+    }
+
+    /* Easter egg: rolling cat (large round) */
+    .roll-cat {
+      opacity: 0;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .roll-cat.rolling {
+      animation: roll-cat-go 3s linear forwards;
+    }
+    @keyframes roll-cat-go {
+      0%   { opacity: 0; transform: translateX(-220px) rotate(0deg); }
+      5%   { opacity: 1; }
+      95%  { opacity: 1; }
+      100% { opacity: 0; transform: translateX(220px) rotate(1080deg); }
+    }
+
+    /* Easter egg: balloons rising from chimney */
+    .balloons { opacity: 0; }
+    .balloons.released { opacity: 1; }
+    .balloons.released .balloon {
+      animation: balloon-rise 3.2s ease-in forwards;
+    }
+    .balloons.released .balloon-2 { animation-delay: 0.18s; }
+    .balloons.released .balloon-3 { animation-delay: 0.36s; }
+    @keyframes balloon-rise {
+      0%   { transform: translate(0, 0); opacity: 1; }
+      85%  { opacity: 1; }
+      100% { transform: translate(14px, -200px); opacity: 0; }
+    }
+
+    /* Door hint text — fades in after letter drops, fades out after door clicked */
+    #door-hint {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #888;
+      margin-top: 0.5rem;
+      font-style: italic;
+      opacity: 0;
+      animation: hint-in 0.5s ease forwards;
+      animation-delay: 4s;
+      transition: opacity 0.4s ease;
+    }
+    @keyframes hint-in { to { opacity: 0.7; } }
+    .door-clicked #door-hint { opacity: 0; }
+
+    /* Bottom-right back link (replaces skip) */
+    #back-home {
       display: block;
       text-align: right;
       font-size: 0.85rem;
       color: #999;
-      margin-top: 0.5rem;
+      margin-top: 0.4rem;
       cursor: pointer;
       text-decoration: underline;
       user-select: none;
     }
-    #skip:hover { color: #111; }
+    #back-home:hover { color: #111; }
 
     /* === Poem === */
     #poem {
       display: none;
-      max-width: 620px;
-      width: 100%;
-      animation: poem-in 0.8s ease;
+      animation: poem-in 0.6s ease;
     }
     #poem.show { display: block; }
     @keyframes poem-in {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translate(-50%, -46%); }
+      to   { opacity: 1; transform: translate(-50%, -50%); }
     }
     .paper {
       background: #fdf8e8;
@@ -235,9 +324,7 @@
       margin-bottom: 1.8rem;
       color: #444;
     }
-    .paper p {
-      margin-bottom: 1rem;
-    }
+    .paper p { margin-bottom: 1rem; }
     .paper p:last-of-type { margin-bottom: 0; }
     .paper .back {
       display: inline-block;
@@ -245,6 +332,7 @@
       color: #0000ee;
       text-decoration: underline;
       padding: 2px 4px;
+      cursor: pointer;
     }
     .paper .back:hover {
       background: #00e5ff;
@@ -282,16 +370,18 @@
         <!-- Sky -->
         <rect x="0" y="0" width="192" height="100" fill="#bcd9eb"/>
 
-        <!-- Sun -->
-        <circle cx="160" cy="20" r="9" fill="#ffd633" stroke="#d4901a" stroke-width="0.8"/>
-        <line x1="160" y1="6"  x2="160" y2="2"  stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
-        <line x1="160" y1="38" x2="160" y2="34" stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
-        <line x1="146" y1="20" x2="142" y2="20" stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
-        <line x1="174" y1="20" x2="178" y2="20" stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
-        <line x1="150" y1="10" x2="146" y2="6"  stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
-        <line x1="170" y1="10" x2="174" y2="6"  stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
-        <line x1="150" y1="30" x2="146" y2="34" stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
-        <line x1="170" y1="30" x2="174" y2="34" stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
+        <!-- Sun (clickable — rolls a fat cat across) -->
+        <g id="sun">
+          <circle cx="160" cy="20" r="9" fill="#ffd633" stroke="#d4901a" stroke-width="0.8"/>
+          <line x1="160" y1="6"  x2="160" y2="2"  stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="160" y1="38" x2="160" y2="34" stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="146" y1="20" x2="142" y2="20" stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="174" y1="20" x2="178" y2="20" stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="150" y1="10" x2="146" y2="6"  stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="170" y1="10" x2="174" y2="6"  stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="150" y1="30" x2="146" y2="34" stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="170" y1="30" x2="174" y2="34" stroke="#d4901a" stroke-width="1.4" stroke-linecap="round"/>
+        </g>
 
         <!-- Cloud -->
         <ellipse cx="30" cy="14" rx="14" ry="5"  fill="#ffffff" stroke="#999" stroke-width="0.6"/>
@@ -304,9 +394,11 @@
         <path d="M 60 45 Q 90 30 120 22"  stroke="#8b2828" stroke-width="0.5" fill="none" opacity="0.5"/>
         <path d="M 100 22 Q 130 30 160 45" stroke="#8b2828" stroke-width="0.5" fill="none" opacity="0.5"/>
 
-        <!-- Chimney -->
-        <rect x="138" y="22" width="6"  height="20" fill="#7a4d28" stroke="#3a2018" stroke-width="0.8"/>
-        <rect x="136" y="20" width="10" height="2"  fill="#5a3820" stroke="#3a2018" stroke-width="0.4"/>
+        <!-- Chimney (clickable — releases balloons) -->
+        <g id="chimney">
+          <rect x="138" y="22" width="6"  height="20" fill="#7a4d28" stroke="#3a2018" stroke-width="0.8"/>
+          <rect x="136" y="20" width="10" height="2"  fill="#5a3820" stroke="#3a2018" stroke-width="0.4"/>
+        </g>
 
         <!-- House body -->
         <rect x="14" y="50" width="164" height="96" fill="#f5e1a8" stroke="#5a3820" stroke-width="1.4" rx="2"/>
@@ -335,11 +427,28 @@
         <!-- Door frame -->
         <rect x="80" y="98" width="32" height="48" fill="#4a2810" stroke="#3a2018" stroke-width="0.8"/>
         <rect x="82" y="100" width="28" height="46" fill="#2a1a10"/>
-        <g class="door-body">
+
+        <!-- Door body (clickable — opens to release cat) -->
+        <g class="door-body" id="door-body">
           <rect x="82" y="100" width="28" height="46" fill="#8b5a2b" stroke="#5a3820" stroke-width="0.8"/>
           <rect x="86" y="104" width="20" height="14" fill="none" stroke="#5a3820" stroke-width="0.7" rx="1"/>
-          <rect x="86" y="122" width="20" height="14" fill="none" stroke="#5a3820" stroke-width="0.7" rx="1"/>
-          <circle cx="105" cy="122" r="1.5" fill="#d4a017" stroke="#a8801a" stroke-width="0.4"/>
+          <rect x="86" y="128" width="20" height="14" fill="none" stroke="#5a3820" stroke-width="0.7" rx="1"/>
+          <circle class="doorknob" cx="105" cy="122" r="1.5" fill="#d4a017" stroke="#a8801a" stroke-width="0.4"/>
+
+          <!-- Dachshund sign (clickable — runs a halo'd dachshund across) -->
+          <g id="dachshund-sign">
+            <rect x="88" y="108" width="16" height="10" fill="#fdf8e8" stroke="#5a3820" stroke-width="0.6" rx="0.6"/>
+            <!-- Tiny pixel dachshund silhouette inside the sign -->
+            <rect x="91" y="113" width="9"  height="2" fill="#5a3018"/>
+            <rect x="99" y="111" width="3"  height="3" fill="#5a3018"/>
+            <rect x="102" y="113" width="1" height="1" fill="#5a3018"/>
+            <rect x="100" y="110" width="1" height="1" fill="#5a3018"/>
+            <rect x="91" y="115" width="1"  height="2" fill="#5a3018"/>
+            <rect x="93" y="115" width="1"  height="2" fill="#5a3018"/>
+            <rect x="98" y="115" width="1"  height="2" fill="#5a3018"/>
+            <rect x="100" y="115" width="1" height="2" fill="#5a3018"/>
+            <rect x="89" y="112" width="2"  height="1" fill="#5a3018"/>
+          </g>
         </g>
 
         <!-- Door step -->
@@ -363,15 +472,31 @@
         <path d="M 158 146 L 160 142 L 162 146"  stroke="#4a7530" stroke-width="0.6" fill="none"/>
         <path d="M 175 146 L 177 141 L 179 146"  stroke="#4a7530" stroke-width="0.6" fill="none"/>
 
-        <!-- Letter (crayon, rounded envelope) -->
+        <!-- Letter -->
         <g class="letter-drop">
-          <g class="letter-pulse">
+          <g class="letter-pulse" id="letter-pulse">
             <g class="letter-clickable" id="letter">
               <ellipse cx="96" cy="148" rx="9" ry="0.8" fill="#5a3820" opacity="0.25"/>
               <rect x="86" y="139" width="20" height="9" fill="#fffaf0" stroke="#5a3820" stroke-width="0.8" rx="1"/>
               <path d="M 86 139 L 96 145 L 106 139" stroke="#5a3820" stroke-width="0.8" fill="#f5e8c8"/>
               <circle cx="96" cy="143" r="1.6" fill="#c44" stroke="#882020" stroke-width="0.3"/>
             </g>
+          </g>
+        </g>
+
+        <!-- Balloons (released by chimney click) -->
+        <g id="balloons" class="balloons">
+          <g class="balloon">
+            <ellipse cx="141" cy="18" rx="2" ry="2.5" fill="#ff8caa" stroke="#aa3060" stroke-width="0.4"/>
+            <line x1="141" y1="20.5" x2="141" y2="24" stroke="#aa3060" stroke-width="0.4"/>
+          </g>
+          <g class="balloon balloon-2">
+            <ellipse cx="146" cy="20" rx="2" ry="2.5" fill="#66b8e0" stroke="#1a5a90" stroke-width="0.4"/>
+            <line x1="146" y1="22.5" x2="146" y2="26" stroke="#1a5a90" stroke-width="0.4"/>
+          </g>
+          <g class="balloon balloon-3">
+            <ellipse cx="139" cy="22" rx="2" ry="2.5" fill="#ffd633" stroke="#a07010" stroke-width="0.4"/>
+            <line x1="139" y1="24.5" x2="139" y2="28" stroke="#a07010" stroke-width="0.4"/>
           </g>
         </g>
       </g>
@@ -398,38 +523,25 @@
       </g>
 
       <!-- ====== Pixel-art cat (grey, kept crisp, outside wobble filter) ====== -->
-      <g class="cat pixel-sprite">
+      <g class="cat pixel-sprite" id="cat">
         <g class="cat-bob">
-          <!-- Tail (right end, curling up) -->
           <rect x="123" y="135" width="3" height="2" fill="#8a8a8a"/>
           <rect x="125" y="132" width="2" height="4" fill="#8a8a8a"/>
           <rect x="123" y="130" width="2" height="2" fill="#8a8a8a"/>
-          <!-- Body -->
           <rect x="108" y="136" width="16" height="9" fill="#8a8a8a"/>
-          <!-- Belly highlight -->
           <rect x="110" y="143" width="12" height="2" fill="#a4a4a4"/>
-          <!-- Head -->
           <rect x="100" y="130" width="9" height="9" fill="#8a8a8a"/>
-          <!-- Ears -->
           <rect x="100" y="128" width="2" height="2" fill="#8a8a8a"/>
           <rect x="106" y="128" width="2" height="2" fill="#8a8a8a"/>
-          <!-- Inner ear -->
           <rect x="106" y="129" width="1" height="1" fill="#fbbac8"/>
-          <!-- Eye -->
           <rect x="101" y="133" width="1" height="2" fill="#ffea00"/>
           <rect x="101" y="134" width="1" height="1" fill="#1a1a1a"/>
-          <!-- Nose -->
           <rect x="100" y="136" width="1" height="1" fill="#fbbac8"/>
-          <!-- Whiskers -->
-          <rect x="98" y="136" width="2" height="1" fill="#bbb" opacity="0.7"/>
-          <!-- Back legs -->
+          <rect x="98"  y="136" width="2" height="1" fill="#bbb" opacity="0.7"/>
           <rect x="115" y="145" width="2" height="2" fill="#8a8a8a"/>
           <rect x="120" y="145" width="2" height="2" fill="#8a8a8a"/>
-          <!-- Front leg (planted) -->
           <rect x="108" y="145" width="2" height="2" fill="#8a8a8a"/>
-          <!-- Front paw (raised, scratching) -->
           <rect class="cat-paw" x="98" y="141" width="3" height="2" fill="#8a8a8a"/>
-          <!-- Scratch sparks -->
           <g class="spark">
             <rect x="95" y="139" width="1" height="1" fill="#fff"/>
             <rect x="94" y="141" width="1" height="1" fill="#fff"/>
@@ -440,8 +552,63 @@
           </g>
         </g>
       </g>
+
+      <!-- ====== Easter egg: chocolate dachshund with halo (pixel) ====== -->
+      <g id="dachshund" class="dachshund pixel-sprite">
+        <!-- Halo (gold ring above head) -->
+        <rect x="22" y="143" width="5" height="1" fill="#ffd633"/>
+        <rect x="21" y="144" width="1" height="2" fill="#ffd633"/>
+        <rect x="27" y="144" width="1" height="2" fill="#ffd633"/>
+        <rect x="22" y="146" width="5" height="1" fill="#ffd633"/>
+        <!-- Head -->
+        <rect x="22" y="148" width="6" height="4" fill="#5a3018"/>
+        <!-- Snout -->
+        <rect x="28" y="150" width="2" height="2" fill="#5a3018"/>
+        <!-- Ear (floppy) -->
+        <rect x="20" y="149" width="2" height="3" fill="#3e2010"/>
+        <!-- Eye -->
+        <rect x="25" y="149" width="1" height="1" fill="#fff"/>
+        <!-- Body -->
+        <rect x="2"  y="151" width="22" height="4" fill="#5a3018"/>
+        <!-- Belly -->
+        <rect x="2"  y="155" width="22" height="1" fill="#3e2010"/>
+        <!-- Front legs -->
+        <rect x="22" y="155" width="1"  height="3" fill="#5a3018"/>
+        <rect x="20" y="155" width="1"  height="3" fill="#5a3018"/>
+        <!-- Back legs -->
+        <rect x="4"  y="155" width="1"  height="3" fill="#5a3018"/>
+        <rect x="6"  y="155" width="1"  height="3" fill="#5a3018"/>
+        <!-- Tail -->
+        <rect x="0"  y="151" width="2"  height="1" fill="#5a3018"/>
+        <rect x="0"  y="150" width="1"  height="1" fill="#5a3018"/>
+      </g>
+
+      <!-- ====== Easter egg: rolling round cat (pixel) ====== -->
+      <g id="roll-cat" class="roll-cat pixel-sprite">
+        <!-- Round body (orange tabby) -->
+        <rect x="6"  y="135" width="12" height="2" fill="#d68a3a"/>
+        <rect x="4"  y="137" width="16" height="2" fill="#d68a3a"/>
+        <rect x="2"  y="139" width="20" height="6" fill="#d68a3a"/>
+        <rect x="4"  y="145" width="16" height="2" fill="#d68a3a"/>
+        <rect x="6"  y="147" width="12" height="2" fill="#d68a3a"/>
+        <!-- Tabby stripes -->
+        <rect x="6"  y="139" width="2" height="2" fill="#a85c1a" opacity="0.6"/>
+        <rect x="14" y="139" width="2" height="2" fill="#a85c1a" opacity="0.6"/>
+        <rect x="10" y="143" width="2" height="2" fill="#a85c1a" opacity="0.6"/>
+        <!-- Ears -->
+        <rect x="6"  y="133" width="2" height="2" fill="#d68a3a"/>
+        <rect x="16" y="133" width="2" height="2" fill="#d68a3a"/>
+        <!-- Eyes (closed/sleepy slits) -->
+        <rect x="8"  y="141" width="2" height="1" fill="#222"/>
+        <rect x="14" y="141" width="2" height="1" fill="#222"/>
+        <!-- Mouth -->
+        <rect x="11" y="143" width="2" height="1" fill="#222"/>
+        <!-- Belly highlight -->
+        <rect x="6"  y="143" width="12" height="2" fill="#e6a85a" opacity="0.45"/>
+      </g>
     </svg>
-    <a id="skip">skip &rarr;</a>
+    <p id="door-hint">click the door</p>
+    <a href="/" id="back-home">&larr; back</a>
   </div>
 
   <!-- State 3: Poem -->
@@ -449,24 +616,32 @@
     <div class="paper">
       <h2>happy birthday, mom</h2>
       <div id="poem-content"></div>
-      <a href="/" class="back">&larr; back</a>
+      <a class="back" id="back-to-house">&larr; back</a>
     </div>
   </div>
 
   <script>
-    // AES-GCM-256 / PBKDF2-SHA256. The poem is decryptable only with the right
-    // password — wrong password = AES-GCM auth-tag mismatch = exception.
-    const SALT_B64 = 'YCpxklX6uxjwCg4ldXPJ4g==';
-    const IV_B64   = 'KY8L2iPhT23vdb+h';
-    const CT_B64   = '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';
+    // AES-GCM-256 / PBKDF2-SHA256. Wrong password => decrypt throws.
+    const SALT_B64 = 'o24NQJN5zjZ8EsGEA4xW0A==';
+    const IV_B64   = 'AcCCu7vAnkNw9msG';
+    const CT_B64   = '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';
     const ITERATIONS = 200000;
 
-    const lockScreen = document.getElementById('lock-screen');
-    const scene      = document.getElementById('scene');
-    const poem       = document.getElementById('poem');
-    const pw         = document.getElementById('pw');
-    const skip       = document.getElementById('skip');
-    let letter; // bound after decrypt (the SVG element exists from page load)
+    const lockScreen   = document.getElementById('lock-screen');
+    const scene        = document.getElementById('scene');
+    const poem         = document.getElementById('poem');
+    const pw           = document.getElementById('pw');
+    const doorBody     = document.getElementById('door-body');
+    const cat          = document.getElementById('cat');
+    const letter       = document.getElementById('letter');
+    const letterPulse  = document.getElementById('letter-pulse');
+    const sun          = document.getElementById('sun');
+    const chimney      = document.getElementById('chimney');
+    const dachshundSign = document.getElementById('dachshund-sign');
+    const dachshund    = document.getElementById('dachshund');
+    const rollCat      = document.getElementById('roll-cat');
+    const balloons     = document.getElementById('balloons');
+    const backToHouse  = document.getElementById('back-to-house');
 
     function b64ToBytes(s) {
       return Uint8Array.from(atob(s), c => c.charCodeAt(0));
@@ -506,18 +681,58 @@
       }
     }
 
+    // Door click → swing open → cat emerges → letter becomes ready
+    let doorOpened = false;
+    function openDoor() {
+      if (doorOpened) return;
+      doorOpened = true;
+      scene.classList.add('door-clicked');
+      doorBody.classList.add('opening');
+      setTimeout(() => cat.classList.add('emerging'), 400);
+      setTimeout(() => {
+        letter.classList.add('ready');
+        letterPulse.classList.add('ready');
+      }, 2400);
+    }
+
     function openLetter() {
-      scene.classList.remove('show');
+      if (!letter.classList.contains('ready')) return;
+      scene.classList.add('dim');
       poem.classList.add('show');
+    }
+
+    function showHouse() {
+      scene.classList.remove('dim');
+      poem.classList.remove('show');
+    }
+
+    // Easter eggs — restart-able animations via reflow trick
+    function restartAnim(el, cls) {
+      el.classList.remove(cls);
+      void el.offsetWidth;
+      el.classList.add(cls);
+    }
+
+    function runDachshund() { restartAnim(dachshund, 'running'); }
+    function rollTheCat()   { restartAnim(rollCat,   'rolling'); }
+    function releaseBalloons() {
+      balloons.classList.remove('released');
+      // Force reflow on each balloon child so animations restart
+      balloons.querySelectorAll('.balloon').forEach(b => void b.offsetWidth);
+      balloons.classList.add('released');
     }
 
     pw.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') tryUnlock();
     });
 
-    letter = document.getElementById('letter');
+    doorBody.addEventListener('click', openDoor);
     letter.addEventListener('click', openLetter);
-    skip.addEventListener('click', openLetter);
+    backToHouse.addEventListener('click', showHouse);
+
+    sun.addEventListener('click', (e) => { e.stopPropagation(); rollTheCat(); });
+    chimney.addEventListener('click', (e) => { e.stopPropagation(); releaseBalloons(); });
+    dachshundSign.addEventListener('click', (e) => { e.stopPropagation(); runDachshund(); });
   </script>
 </body>
 </html>
