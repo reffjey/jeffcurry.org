@@ -448,58 +448,74 @@
   <div id="poem">
     <div class="paper">
       <h2>happy birthday, mom</h2>
-      <p>Happy birthday to mom, happy birthday to you<br>Congratulations on making it around the sun times 52</p>
-      <p>Or maybe I&rsquo;ve got it twisted, and 1952 is what I meant<br>Anyway, thank you very much for my very first instrument</p>
-      <p>The saxophone taught me to love music, or maybe it was 92.7<br>Or most probably the croons and thrashes of Led Zeppelin</p>
-      <p>So many memories of listening to the radio as you ran through your chores<br>You&rsquo;d hum along off-key to songs you only half remembered the words of</p>
-      <p>But somehow that made them sound better, like the melody had been rewritten with extra love<br>A drum lesson and a sizzler in the morning tricked me into following you spinning through so many store doors</p>
-      <p>At the time, it was frustrating, long, and arduous, what a long way to spend a Saturday<br>But at the same time, it taught me patience, and appreciation for the slower way</p>
-      <p>Sometimes I wish I could revert back to this version of me, with no concerns for the stressors of adult life<br>It felt nice living that life again a little bit when we went down to Orlando and you found out you liked garlic bread</p>
-      <p>So many things you discovered you liked this year, like mangos and garlic bread and tofu cooked many different ways<br>I personally discovered you liked Michael Jackson, and that Ted goes to the bathroom 90 times in the course of 4 days</p>
-      <p>I can&rsquo;t wait to visit more places with you, and genuinely think you&rsquo;ll find Japan to be absolutely great<br>You&rsquo;ll be surprised by the efficiency, the trains, the snacks, the trees and birds and how everyone is a normal weight</p>
-      <p>We&rsquo;ve still got so many places left on the list, so many meals we haven&rsquo;t shared<br>So many trains to miss and museums to wander through, so many afternoons with nowhere to be and nothing to be scared</p>
-      <p>I&rsquo;m glad you&rsquo;ve been exercising more, expanding your peloton from 10 miles to 11, and doing situps every morning in bed<br>Sake and Sans cheer you on from the sidelines as you get your calisthenics done, but in actuality they just want to be fed</p>
-      <p>Sake purrs louder when you walk in the room, even louder than he does for me<br>Which is honestly a little rude, but I get it, that&rsquo;s just the way it has to be</p>
-      <p>I hope that this year is the beginning of the years that you begin to find and support the life you want to live for yourself<br>Starting with getting that damn box of Vincent Van Gogh legos up onto the wall and no longer on top of the poop shelf</p>
-      <p>This year began with a boom, quite literally the chandelier falling down onto the ground it watched over for the past twenty years<br>With the air conditioning breaking for the third time in a year, there&rsquo;s never been a better time for you to explore the world and face your fears</p>
-      <p>I&rsquo;ll be there alongside you for the pieces that I can, and I&rsquo;ll watch Sake and Dopey in all the moments that I cannot partake<br>I am so happy to see you enjoying life the best you possibly can and couldn&rsquo;t be more proud of you not ever being a fake</p>
-      <p>The funny thing about getting older is realizing how much of who I am is just pieces of who you are<br>Your mannerisms, your laugh, your weird way of narrating like you&rsquo;re in your own little memoir</p>
-      <p>I love you dearly for all that you&rsquo;ve done for me and all the positivity you&rsquo;ve shined on my life over the course of the growing number of years<br>I&rsquo;ve been here I sincerely promise to always do absolutely everything I can to keep you as close as I can and near and dear</p>
+      <div id="poem-content"></div>
       <a href="/" class="back">&larr; back</a>
     </div>
   </div>
 
   <script>
-    const PASSWORD = 'slinky';
+    // AES-GCM-256 / PBKDF2-SHA256. The poem is decryptable only with the right
+    // password — wrong password = AES-GCM auth-tag mismatch = exception.
+    const SALT_B64 = 'YCpxklX6uxjwCg4ldXPJ4g==';
+    const IV_B64   = 'KY8L2iPhT23vdb+h';
+    const CT_B64   = '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';
+    const ITERATIONS = 200000;
+
     const lockScreen = document.getElementById('lock-screen');
     const scene      = document.getElementById('scene');
     const poem       = document.getElementById('poem');
     const pw         = document.getElementById('pw');
-    const letter     = document.getElementById('letter');
     const skip       = document.getElementById('skip');
+    let letter; // bound after decrypt (the SVG element exists from page load)
 
-    function unlock() {
-      lockScreen.style.display = 'none';
-      scene.classList.add('show');
+    function b64ToBytes(s) {
+      return Uint8Array.from(atob(s), c => c.charCodeAt(0));
     }
+
+    async function decryptPoem(password) {
+      const enc = new TextEncoder();
+      const baseKey = await crypto.subtle.importKey(
+        'raw', enc.encode(password),
+        { name: 'PBKDF2' }, false, ['deriveKey']
+      );
+      const key = await crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt: b64ToBytes(SALT_B64), iterations: ITERATIONS, hash: 'SHA-256' },
+        baseKey,
+        { name: 'AES-GCM', length: 256 },
+        false, ['decrypt']
+      );
+      const ptBuf = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: b64ToBytes(IV_B64) },
+        key, b64ToBytes(CT_B64)
+      );
+      return new TextDecoder().decode(ptBuf);
+    }
+
+    async function tryUnlock() {
+      const guess = pw.value.toLowerCase().trim();
+      try {
+        const html = await decryptPoem(guess);
+        document.getElementById('poem-content').innerHTML = html;
+        lockScreen.style.display = 'none';
+        scene.classList.add('show');
+      } catch (e) {
+        pw.classList.remove('shake');
+        void pw.offsetWidth;
+        pw.classList.add('shake');
+        pw.value = '';
+      }
+    }
+
     function openLetter() {
       scene.classList.remove('show');
       poem.classList.add('show');
     }
 
     pw.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        if (pw.value.toLowerCase().trim() === PASSWORD) {
-          unlock();
-        } else {
-          pw.classList.remove('shake');
-          void pw.offsetWidth;
-          pw.classList.add('shake');
-          pw.value = '';
-        }
-      }
+      if (e.key === 'Enter') tryUnlock();
     });
 
+    letter = document.getElementById('letter');
     letter.addEventListener('click', openLetter);
     skip.addEventListener('click', openLetter);
   </script>
